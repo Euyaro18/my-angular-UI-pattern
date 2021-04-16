@@ -21,6 +21,7 @@ const log4js = require("log4js");
 const localConfig = require("./config/local.json");
 const path = require("path");
 var cookieParser = require("cookie-parser");
+const proxy = require("express-http-proxy");
 
 const logger = log4js.getLogger(appName);
 const app = express();
@@ -32,14 +33,15 @@ app.use(express.static(path.join(__dirname, "../client/dist/")));
 
 const server = http.createServer(app);
 
+const apiHost = process.env.API_HOST || 'localhost:8081';
+app.use('/api', proxy(apiHost));
+
 app.use(
   log4js.connectLogger(logger, { level: process.env.LOG_LEVEL || "info" })
 );
 const serviceManager = require("./services/service-manager");
 require("./services/index")(app);
 require("./routers/index")(app, server);
-
-// Add your code here
 
 const port = process.env.PORT || localConfig.port;
 server.listen(port, function() {
